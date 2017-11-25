@@ -62,6 +62,11 @@
  */
 #define CAN_ANY_MAILBOX             0U
 
+/**
+ * @brief   Special mailbox identifier.
+ */
+#define CAN_ANY_MAILBOX_AVOID_PRIORITY_INVERSION 0xffff
+
 /*===========================================================================*/
 /* Driver pre-compile time settings.                                         */
 /*===========================================================================*/
@@ -225,6 +230,7 @@ extern "C" {
   void canObjectInit(CANDriver *canp);
   void canStart(CANDriver *canp, const CANConfig *config);
   void canStop(CANDriver *canp);
+  msg_t canWaitForMailboxEmptyEventS(CANDriver *canp, systime_t timeout);
   bool canTryTransmitI(CANDriver *canp,
                        canmbx_t mailbox,
                        const CANTxFrame *ctfp);

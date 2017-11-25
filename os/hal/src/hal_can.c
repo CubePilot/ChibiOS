@@ -42,6 +42,23 @@
 /* Driver local functions.                                                   */
 /*===========================================================================*/
 
+static uint32_t get_tx_frame_priority(const CANTxFrame *ctfp) {
+  uint32_t ret = 0;
+
+  if (ctfp->IDE) {
+    ret |= ((ctfp->EID >> 18) & 0x7ff) << 21; // Identifier A
+    ret |= 1<<20; // SRR
+    ret |= 1<<19; // EID
+    ret |= (ctfp->EID & 0x3ffff) << 1; // Identifier B
+    ret |= ctfp->RTR; // RTR
+  } else {
+    ret |= ctfp->SID << 21; // Identifier
+    ret |= ctfp->RTR << 20; // RTR
+  }
+
+  return ~ret;
+}
+
 /*===========================================================================*/
 /* Driver exported functions.                                                */
 /*===========================================================================*/
@@ -150,12 +167,31 @@ void canStop(CANDriver *canp) {
 }
 
 /**
+ * @brief   Waits until a mailbox becomes empty.
+ *
+ * @param[in] canp      pointer to the @p CANDriver object
+ * @param[in] timeout   the number of ticks before the operation timeouts,
+ *                      the following special values are allowed:
+ *                      - @a TIME_IMMEDIATE immediate timeout.
+ *                      - @a TIME_INFINITE no timeout.
+ *                      .
+ * @return              The operation result.
+ * @retval MSG_OK       Mailbox empty event occurred.
+ * @retval MSG_TIMEOUT  The operation has timed out.
+ *
+ * @sclass
+ */
+msg_t canWaitForMailboxEmptyEventS(CANDriver *canp, systime_t timeout) {
+  return osalThreadEnqueueTimeoutS(&canp->txqueue, timeout);
+}
+
+/**
  * @brief   Can frame transmission attempt.
  * @details The specified frame is queued for transmission, if the hardware
  *          queue is full then the function fails.
  *
  * @param[in] canp      pointer to the @p CANDriver object
- * @param[in] mailbox   mailbox number, @p CAN_ANY_MAILBOX for any mailbox
+ * @param[in] mailbox   mailbox number, @p CAN_ANY_MAILBOX for any mailbox, @p CAN_ANY_MAILBOX_AVOID_PRIORITY_INVERSION to fail if there is an equal or higher priority frame already enqueued.
  * @param[in] ctfp      pointer to the CAN frame to be transmitted
  * @return              The operation result.
  * @retval false        Frame transmitted.
@@ -173,7 +209,26 @@ bool canTryTransmitI(CANDriver *canp,
   osalDbgAssert((canp->state == CAN_READY) || (canp->state == CAN_SLEEP),
                 "invalid state");
 
-  /* If the RX mailbox is full then the function fails.*/
+  if (canp->state == CAN_SLEEP) {
+    return true;
+  }
+
+  if (mailbox == CAN_ANY_MAILBOX_AVOID_PRIORITY_INVERSION) {
+    uint32_t new_frame_priority = get_tx_frame_priority(ctfp);
+    uint32_t i;
+    for (i=1; i<=CAN_TX_MAILBOXES; i++) {
+      CANTxFrame existing_tx_frame;
+      if (can_lld_get_tx_frame(canp, i, &existing_tx_frame)) {
+        if (get_tx_frame_priority(&existing_tx_frame) >= new_frame_priority) {
+          return true;
+        }
+      }
+    }
+
+    mailbox = CAN_ANY_MAILBOX;
+  }
+
+  /* If the TX mailbox is full then the function fails.*/
   if (!can_lld_is_tx_empty(canp, mailbox)) {
     return true;
   }
@@ -225,7 +280,7 @@ bool canTryReceiveI(CANDriver *canp,
  * @note    Trying to transmit while in sleep mode simply enqueues the thread.
  *
  * @param[in] canp      pointer to the @p CANDriver object
- * @param[in] mailbox   mailbox number, @p CAN_ANY_MAILBOX for any mailbox
+ * @param[in] mailbox   mailbox number, @p CAN_ANY_MAILBOX for any mailbox, @p CAN_ANY_MAILBOX_AVOID_PRIORITY_INVERSION to delay enqueueing until the new frame will be highest priority in the queue
  * @param[in] ctfp      pointer to the CAN frame to be transmitted
  * @param[in] timeout   the number of ticks before the operation timeouts,
  *                      the following special values are allowed:
@@ -251,18 +306,26 @@ msg_t canTransmitTimeout(CANDriver *canp,
   osalDbgAssert((canp->state == CAN_READY) || (canp->state == CAN_SLEEP),
                 "invalid state");
 
-  /*lint -save -e9007 [13.5] Right side is supposed to be pure.*/
-  while ((canp->state == CAN_SLEEP) || !can_lld_is_tx_empty(canp, mailbox)) {
-  /*lint -restore*/
-   msg_t msg = osalThreadEnqueueTimeoutS(&canp->txqueue, timeout);
+  systime_t t_begin = osalOsGetSystemTimeX();
+  systime_t t_elapsed = 0;
+  do {
+    systime_t t_remaining = timeout - t_elapsed;
+
+    if (!canTryTransmitI(canp, mailbox, ctfp)) {
+      osalSysUnlock();
+      return MSG_OK;
+    }
+
+    msg_t msg = osalThreadEnqueueTimeoutS(&canp->txqueue, t_remaining);
     if (msg != MSG_OK) {
       osalSysUnlock();
       return msg;
     }
-  }
-  can_lld_transmit(canp, mailbox, ctfp);
+
+    t_elapsed = osalOsGetSystemTimeX() - t_begin;
+  } while (t_elapsed < timeout);
   osalSysUnlock();
-  return MSG_OK;
+  return MSG_TIMEOUT;
 }
 
 /**
@@ -299,18 +362,26 @@ msg_t canReceiveTimeout(CANDriver *canp,
   osalDbgAssert((canp->state == CAN_READY) || (canp->state == CAN_SLEEP),
                 "invalid state");
 
-  /*lint -save -e9007 [13.5] Right side is supposed to be pure.*/
-  while ((canp->state == CAN_SLEEP) || !can_lld_is_rx_nonempty(canp, mailbox)) {
-  /*lint -restore*/
-    msg_t msg = osalThreadEnqueueTimeoutS(&canp->rxqueue, timeout);
+  systime_t t_begin = osalOsGetSystemTimeX();
+  systime_t t_elapsed = 0;
+  do {
+    systime_t t_remaining = timeout - t_elapsed;
+
+    if (!canTryReceiveI(canp, mailbox, crfp)) {
+      osalSysUnlock();
+      return MSG_OK;
+    }
+
+    msg_t msg = osalThreadEnqueueTimeoutS(&canp->rxqueue, t_remaining);
     if (msg != MSG_OK) {
       osalSysUnlock();
       return msg;
     }
-  }
-  can_lld_receive(canp, mailbox, crfp);
+
+    t_elapsed = osalOsGetSystemTimeX() - t_begin;
+  } while (t_elapsed < timeout);
   osalSysUnlock();
-  return MSG_OK;
+  return MSG_TIMEOUT;
 }
 
 #if (CAN_USE_SLEEP_MODE == TRUE) || defined(__DOXYGEN__)

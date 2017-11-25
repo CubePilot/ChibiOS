@@ -799,6 +799,57 @@ bool can_lld_is_tx_empty(CANDriver *canp, canmbx_t mailbox) {
 }
 
 /**
+ * @brief   Retrieves the frame stored in the specified mailbox
+ *
+ * @param[in] canp      pointer to the @p CANDriver object
+ * @param[in] mailbox   mailbox number, @p CAN_ANY_MAILBOX is not a valid value
+ * @param[out] ret      pointer to the buffer where the CAN frame is copied
+ *
+ * @return              Same as !can_lld_is_tx_empty for this mailbox
+ * @retval FALSE        this mailbox is empty
+ * @retval TRUE         this mailbox is not empty
+ *
+ * @notapi
+ */
+bool can_lld_get_tx_frame(CANDriver *canp, canmbx_t mailbox, CANTxFrame *ret) {
+  CAN_TxMailBox_TypeDef *tmbp;
+
+  switch (mailbox) {
+    case 1:
+      tmbp = &canp->can->sTxMailBox[0];
+    case 2:
+      tmbp = &canp->can->sTxMailBox[1];
+    case 3:
+      tmbp = &canp->can->sTxMailBox[2];
+    default:
+      return FALSE;
+  };
+
+  ret->DLC = tmbp->TDTR & 0xF;
+  ret->RTR = (tmbp->TIR >> 1) & 1;
+  ret->IDE = (tmbp->TIR >> 2) & 1;
+  if (ret->IDE) {
+    ret->EID = (tmbp->TIR >> 3) & 0x1fffffff;
+  } else {
+    ret->SID = (tmbp->TIR >> 21) & 0x7ff;
+  }
+
+  ret->data32[0] = tmbp->TDLR;
+  ret->data32[1] = tmbp->TDHR;
+
+  switch (mailbox) {
+    case 1:
+      return (canp->can->TSR & CAN_TSR_TME0) == 0;
+    case 2:
+      return (canp->can->TSR & CAN_TSR_TME1) == 0;
+    case 3:
+      return (canp->can->TSR & CAN_TSR_TME2) == 0;
+    default:
+      return FALSE;
+  };
+}
+
+/**
  * @brief   Inserts a frame into the transmit queue.
  *
  * @param[in] canp      pointer to the @p CANDriver object

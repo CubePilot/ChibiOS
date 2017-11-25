@@ -251,6 +251,7 @@ extern "C" {
   void can_lld_start(CANDriver *canp);
   void can_lld_stop(CANDriver *canp);
   bool can_lld_is_tx_empty(CANDriver *canp, canmbx_t mailbox);
+  bool can_lld_get_tx_frame(CANDriver *canp, canmbx_t mailbox, CANTxFrame *ret);
   void can_lld_transmit(CANDriver *canp,
                         canmbx_t mailbox,
                         const CANTxFrame *ctfp);
