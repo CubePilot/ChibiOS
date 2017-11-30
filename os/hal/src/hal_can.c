@@ -205,7 +205,7 @@ bool canTryTransmitI(CANDriver *canp,
 
   osalDbgCheckClassI();
   osalDbgCheck((canp != NULL) && (ctfp != NULL) &&
-               (mailbox <= (canmbx_t)CAN_TX_MAILBOXES));
+               (mailbox <= (canmbx_t)CAN_TX_MAILBOXES || mailbox == CAN_ANY_MAILBOX_AVOID_PRIORITY_INVERSION));
   osalDbgAssert((canp->state == CAN_READY) || (canp->state == CAN_SLEEP),
                 "invalid state");
 
