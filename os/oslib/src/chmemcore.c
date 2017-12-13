@@ -123,6 +123,7 @@ void *chCoreAllocAlignedWithOffsetI(size_t size,
 
   /* Considering also the case where there is numeric overflow.*/
   if ((next > ch_memcore.endmem) || (next < ch_memcore.nextmem)) {
+    CH_CFG_CORE_ALLOCATOR_FAILURE_HOOK();
     return NULL;
   }
 
