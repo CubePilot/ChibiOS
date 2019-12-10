@@ -30,8 +30,6 @@
 
 #if HAL_USE_SDC || defined(__DOXYGEN__)
 
-#include "bouncebuffer.h"
-
 /*===========================================================================*/
 /* Driver local definitions.                                                 */
 /*===========================================================================*/
@@ -250,8 +248,6 @@ static bool sdc_lld_wait_transaction_end(SDCDriver *sdcp, uint32_t n,
 
   if (sdcp->sdmmc->DCTRL & SDMMC_DCTRL_DTDIR) {
     // read operation
-	bouncebuffer_setup_read(sdcp->bouncebuffer, (uint8_t **)&sdcp->sdmmc->IDMABASE0, sdcp->sdmmc->DLEN);
-
 	osalSysLock();
 
 	sdcp->sdmmc->ICR = SDMMC_ICR_ALL_FLAGS;
@@ -264,15 +260,11 @@ static bool sdc_lld_wait_transaction_end(SDCDriver *sdcp, uint32_t n,
 	sdcp->sdmmc->IDMACTRL = 0;
 
 	osalSysUnlock();
-
-	bouncebuffer_finish_read(sdcp->bouncebuffer, (uint8_t *)sdcp->sdmmc->IDMABASE0, sdcp->sdmmc->DLEN);
   } else {
     // write operation
 	sdcp->sdmmc->ICR = SDMMC_ICR_ALL_FLAGS;
 	sdcp->sdmmc->MASK = SDMMC_IDMA_MASK;
 
-	bouncebuffer_setup_write(sdcp->bouncebuffer, (const uint8_t **)&sdcp->sdmmc->IDMABASE0, sdcp->sdmmc->DLEN);
-
 	osalSysLock();
 
 	sdcp->sdmmc->IDMACTRL = SDMMC_IDMA_IDMAEN;
@@ -283,8 +275,6 @@ static bool sdc_lld_wait_transaction_end(SDCDriver *sdcp, uint32_t n,
 	sdcp->sdmmc->IDMACTRL = 0;
 
 	osalSysUnlock();
-
-	bouncebuffer_finish_write(sdcp->bouncebuffer, (uint8_t *)sdcp->sdmmc->IDMABASE0);
   }
 
   if ((sdcp->sdmmc->STA & SDMMC_STA_DATAEND) == 0) {
