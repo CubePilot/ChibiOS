@@ -104,9 +104,6 @@ static void spi_lld_serve_bdma_rx_interrupt(SPIDriver *spip, uint32_t flags) {
     }
   }
   else {
-    /* Stopping SPI.*/
-    spip->spi->CR1 |= SPI_CR1_CSUSP;
-
     /* Stopping DMAs.*/
     bdmaStreamDisable(spip->tx.bdma);
     bdmaStreamDisable(spip->rx.bdma);
@@ -170,9 +167,6 @@ static void spi_lld_serve_dma_rx_interrupt(SPIDriver *spip, uint32_t flags) {
     }
   }
   else {
-    /* Stopping SPI.*/
-    spip->spi->CR1 |= SPI_CR1_CSUSP;
-
     /* Stopping DMAs.*/
     dmaStreamDisable(spip->tx.dma);
     dmaStreamDisable(spip->rx.dma);
