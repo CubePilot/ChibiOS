@@ -705,11 +705,11 @@ void spi_lld_start(SPIDriver *spip) {
 
   /* SPI setup and enable.*/
   spip->spi->CR1 &= ~SPI_CR1_SPE;
-  spip->spi->CR1  = SPI_CR1_MASRX;
+  spip->spi->CR1  = SPI_CR1_MASRX | SPI_CR1_SSI;
   spip->spi->CR2  = 0U;
   spip->spi->CFG1 = (spip->config->cfg1 & ~SPI_CFG1_FTHLV_Msk) |
                     SPI_CFG1_RXDMAEN | SPI_CFG1_TXDMAEN;
-  spip->spi->CFG2 = (spip->config->cfg2 | SPI_CFG2_MASTER | SPI_CFG2_SSOE) &
+  spip->spi->CFG2 = (spip->config->cfg2 | SPI_CFG2_MASTER | SPI_CFG2_SSM) &
                     ~SPI_CFG2_COMM_Msk;
   spip->spi->IER  = SPI_IER_OVRIE;
   spip->spi->IFCR = 0xff8;
