@@ -146,15 +146,18 @@ static void spi_lld_serve_bdma_tx_interrupt(SPIDriver *spip, uint32_t flags) {
  * @param[in] flags     pre-shifted content of the ISR register
  */
 static void spi_lld_serve_dma_rx_interrupt(SPIDriver *spip, uint32_t flags) {
-
   /* DMA errors handling.*/
 #if defined(STM32_SPI_DMA_ERROR_HOOK)
-  if ((flags & (STM32_DMA_ISR_TEIF | STM32_DMA_ISR_DMEIF)) != 0U) {
+  if ((flags & (STM32_DMA_ISR_TEIF)) != 0U) {
     STM32_SPI_DMA_ERROR_HOOK(spip);
   }
 #else
   (void)flags;
 #endif
+
+  if (flags == STM32_DMA_ISR_DMEIF) {
+      return;
+  }
 
   if (spip->config->circular) {
     if ((flags & STM32_DMA_ISR_HTIF) != 0U) {
