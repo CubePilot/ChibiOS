@@ -829,6 +829,8 @@ void spi_lld_ignore(SPIDriver *spip, size_t n) {
 
   osalDbgAssert(n < 65536, "unsupported DMA transfer size");
 
+  spip->spi->CR1 |= SPI_CR1_CSTART;
+
 #if defined(STM32_SPI_DMA_REQUIRED) && defined(STM32_SPI_BDMA_REQUIRED)
   if(spip->is_bdma)
 #endif
@@ -863,8 +865,6 @@ void spi_lld_ignore(SPIDriver *spip, size_t n) {
     dmaStreamEnable(spip->tx.dma);
   }
 #endif
-
-  spip->spi->CR1 |= SPI_CR1_CSTART;
 }
 
 /**
@@ -887,6 +887,8 @@ void spi_lld_exchange(SPIDriver *spip, size_t n,
 
   osalDbgAssert(n < 65536, "unsupported DMA transfer size");
 
+  spip->spi->CR1 |= SPI_CR1_CSTART;
+
 #if defined(STM32_SPI_DMA_REQUIRED) && defined(STM32_SPI_BDMA_REQUIRED)
   if(spip->is_bdma)
 #endif
@@ -921,8 +923,6 @@ void spi_lld_exchange(SPIDriver *spip, size_t n,
     dmaStreamEnable(spip->tx.dma);
   }
 #endif
-
-  spip->spi->CR1 |= SPI_CR1_CSTART;
 }
 
 /**
@@ -941,6 +941,8 @@ void spi_lld_exchange(SPIDriver *spip, size_t n,
 void spi_lld_send(SPIDriver *spip, size_t n, const void *txbuf) {
 
   osalDbgAssert(n < 65536, "unsupported DMA transfer size");
+
+  spip->spi->CR1 |= SPI_CR1_CSTART;
 
 #if defined(STM32_SPI_DMA_REQUIRED) && defined(STM32_SPI_BDMA_REQUIRED)
   if(spip->is_bdma)
@@ -976,8 +978,6 @@ void spi_lld_send(SPIDriver *spip, size_t n, const void *txbuf) {
     dmaStreamEnable(spip->tx.dma);
   }
 #endif
-
-  spip->spi->CR1 |= SPI_CR1_CSTART;
 }
 
 /**
@@ -996,6 +996,8 @@ void spi_lld_send(SPIDriver *spip, size_t n, const void *txbuf) {
 void spi_lld_receive(SPIDriver *spip, size_t n, void *rxbuf) {
 
   osalDbgAssert(n < 65536, "unsupported DMA transfer size");
+
+  spip->spi->CR1 |= SPI_CR1_CSTART;
 
 #if defined(STM32_SPI_DMA_REQUIRED) && defined(STM32_SPI_BDMA_REQUIRED)
   if(spip->is_bdma)
@@ -1031,8 +1033,6 @@ void spi_lld_receive(SPIDriver *spip, size_t n, void *rxbuf) {
     dmaStreamEnable(spip->tx.dma);
   }
 #endif
-
-  spip->spi->CR1 |= SPI_CR1_CSTART;
 }
 
 #if (SPI_SUPPORTS_CIRCULAR == TRUE) || defined(__DOXYGEN__)
