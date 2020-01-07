@@ -712,7 +712,7 @@ void spi_lld_start(SPIDriver *spip) {
   spip->spi->CFG2 = (spip->config->cfg2 | SPI_CFG2_MASTER | SPI_CFG2_SSOE) &
                     ~SPI_CFG2_COMM_Msk;
   spip->spi->IER  = SPI_IER_OVRIE;
-  spip->spi->IFCR = 0xFFFFFFFFU;
+  spip->spi->IFCR = 0xff8;
   spip->spi->CR1 |= SPI_CR1_SPE;
 }
 
