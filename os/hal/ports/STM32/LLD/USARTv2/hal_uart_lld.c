@@ -593,7 +593,7 @@ void uart_lld_init(void) {
   uartObjectInit(&UARTD1);
   UARTD1.usart   = USART1;
   UARTD1.clock   = STM32_USART1CLK;
-  UARTD1.dmamode = STM32_DMA_CR_DMEIE | STM32_DMA_CR_TEIE;
+  UARTD1.dmamode = STM32_DMA_CR_TEIE;
   UARTD1.dmarx   = NULL;
   UARTD1.dmatx   = NULL;
 #if defined(STM32_USART1_NUMBER)
@@ -605,7 +605,7 @@ void uart_lld_init(void) {
   uartObjectInit(&UARTD2);
   UARTD2.usart   = USART2;
   UARTD2.clock   = STM32_USART2CLK;
-  UARTD2.dmamode = STM32_DMA_CR_DMEIE | STM32_DMA_CR_TEIE;
+  UARTD2.dmamode = STM32_DMA_CR_TEIE;
   UARTD2.dmarx   = NULL;
   UARTD2.dmatx   = NULL;
 #if defined(STM32_USART2_NUMBER)
@@ -617,7 +617,7 @@ void uart_lld_init(void) {
   uartObjectInit(&UARTD3);
   UARTD3.usart   = USART3;
   UARTD3.clock   = STM32_USART3CLK;
-  UARTD3.dmamode = STM32_DMA_CR_DMEIE | STM32_DMA_CR_TEIE;
+  UARTD3.dmamode = STM32_DMA_CR_TEIE;
   UARTD3.dmarx   = NULL;
   UARTD3.dmatx   = NULL;
 #if defined(STM32_USART3_NUMBER)
@@ -629,7 +629,7 @@ void uart_lld_init(void) {
   uartObjectInit(&UARTD4);
   UARTD4.usart   = UART4;
   UARTD4.clock   = STM32_UART4CLK;
-  UARTD4.dmamode = STM32_DMA_CR_DMEIE | STM32_DMA_CR_TEIE;
+  UARTD4.dmamode = STM32_DMA_CR_TEIE;
   UARTD4.dmarx   = NULL;
   UARTD4.dmatx   = NULL;
 #if defined(STM32_UART4_NUMBER)
@@ -641,7 +641,7 @@ void uart_lld_init(void) {
   uartObjectInit(&UARTD5);
   UARTD5.usart   = UART5;
   UARTD5.clock   = STM32_UART5CLK;
-  UARTD5.dmamode = STM32_DMA_CR_DMEIE | STM32_DMA_CR_TEIE;
+  UARTD5.dmamode = STM32_DMA_CR_TEIE;
   UARTD5.dmarx   = NULL;
   UARTD5.dmatx   = NULL;
 #if defined(STM32_UART5_NUMBER)
@@ -653,7 +653,7 @@ void uart_lld_init(void) {
   uartObjectInit(&UARTD6);
   UARTD6.usart   = USART6;
   UARTD6.clock   = STM32_USART6CLK;
-  UARTD6.dmamode = STM32_DMA_CR_DMEIE | STM32_DMA_CR_TEIE;
+  UARTD6.dmamode = STM32_DMA_CR_TEIE;
   UARTD6.dmarx   = NULL;
   UARTD6.dmatx   = NULL;
 #if defined(STM32_USART6_NUMBER)
@@ -665,7 +665,7 @@ void uart_lld_init(void) {
   uartObjectInit(&UARTD7);
   UARTD7.usart   = UART7;
   UARTD7.clock   = STM32_UART7CLK;
-  UARTD7.dmamode = STM32_DMA_CR_DMEIE | STM32_DMA_CR_TEIE;
+  UARTD7.dmamode = STM32_DMA_CR_TEIE;
   UARTD7.dmarx   = NULL;
   UARTD7.dmatx   = NULL;
 #if defined(STM32_UART7_NUMBER)
@@ -677,7 +677,7 @@ void uart_lld_init(void) {
   uartObjectInit(&UARTD8);
   UARTD8.usart   = UART8;
   UARTD8.clock   = STM32_UART8CLK;
-  UARTD8.dmamode = STM32_DMA_CR_DMEIE | STM32_DMA_CR_TEIE;
+  UARTD8.dmamode = STM32_DMA_CR_TEIE;
   UARTD8.dmarx   = NULL;
   UARTD8.dmatx   = NULL;
 #if defined(STM32_UART8_NUMBER)
