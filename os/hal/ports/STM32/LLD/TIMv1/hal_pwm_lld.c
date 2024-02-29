@@ -711,7 +711,7 @@ void pwm_lld_start(PWMDriver *pwmp) {
 #endif
 #endif
   /* Timer configured and started.*/
-  pwmp->tim->CR1   = STM32_TIM_CR1_ARPE | STM32_TIM_CR1_URS |
+  pwmp->tim->CR1   = pwmp->config->cr1 | STM32_TIM_CR1_ARPE | STM32_TIM_CR1_URS |
                      STM32_TIM_CR1_CEN;
 }
 

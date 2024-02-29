@@ -566,6 +566,11 @@ typedef struct {
     * @note  Only the DMA-related bits can be specified in this field.
     */
    uint32_t                 dier;
+   /**
+    * @brief TIM CR1 initialization data.
+    * @note  The value of this field should normally be equal to zero.
+    */
+   uint32_t                 cr1;
 } PWMConfig;
 
 /**
