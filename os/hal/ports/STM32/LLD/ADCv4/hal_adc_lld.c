@@ -26,6 +26,10 @@
 
 #if HAL_USE_ADC || defined(__DOXYGEN__)
 
+#if !defined(ADC_ISR_ADRDY)
+#define ADC_ISR_ADRDY           ADC_ISR_ADRD
+#endif
+
 /*===========================================================================*/
 /* Driver local definitions.                                                 */
 /*===========================================================================*/
@@ -115,9 +119,9 @@ static void adc_lld_vreg_off(ADCDriver *adcp) {
  */
 static void adc_lld_analog_on(ADCDriver *adcp) {
 
-  adcp->adcm->ISR = ADC_ISR_ADRD;
+  adcp->adcm->ISR = ADC_ISR_ADRDY;
   adcp->adcm->CR |= ADC_CR_ADEN;
-  while ((adcp->adcm->ISR & ADC_ISR_ADRD) == 0U)
+  while ((adcp->adcm->ISR & ADC_ISR_ADRDY) == 0U)
     ;
 #if STM32_ADC_DUAL_MODE
   adcp->adcs->ISR = ADC_ISR_ADRDY;
