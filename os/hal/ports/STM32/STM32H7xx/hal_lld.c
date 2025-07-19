@@ -293,8 +293,38 @@ void stm32_clock_init(void) {
 #else
   RCC->CR |= RCC_CR_HSEON;
 #endif
-  while ((RCC->CR & RCC_CR_HSERDY) == 0)
-    ;                           /* Waits until HSE is stable.               */
+  #if defined(STM32_HSERDY_TIMEOUT_MS)
+    /* Configure SysTick for timeout measurement */
+    uint32_t hsi_freq_mhz = STM32_HSI_OSC / 1000000;
+    uint32_t timeout_ticks = STM32_HSERDY_TIMEOUT_MS * 1000 * hsi_freq_mhz;
+    
+    /* Build time assert if timeout_ticks exceeds SysTick maximum value */
+    #if (STM32_HSERDY_TIMEOUT_MS * 1000 * (STM32_HSI_CK / 1000000)) > 0xFFFFFF
+      #error "HSE timeout too large for SysTick"
+    #endif
+    
+    SysTick->LOAD = timeout_ticks;
+    SysTick->VAL = 0;  /* Clear current value */
+    SysTick->CTRL = SysTick_CTRL_ENABLE_Msk;  /* Enable SysTick, use processor clock */
+    
+    while ((RCC->CR & RCC_CR_HSERDY) == 0) {
+      if ((SysTick->CTRL & SysTick_CTRL_COUNTFLAG_Msk) != 0) {
+        /* Timeout occurred */
+        SysTick->CTRL = 0x4;  /* Reset SysTick */
+        SysTick->LOAD = 0;  /* Clear SysTick load value */
+        SysTick->VAL = 0;  /* Clear current value */
+        CH_HSE_CLOCK_FAILED();
+        break;
+      }
+    }
+
+    SysTick->CTRL = 0x4;  /* Reset SysTick */
+    SysTick->LOAD = 0;  /* Clear SysTick load value */
+    SysTick->VAL = 0;  /* Clear current value */
+  #endif
+    // continue waiting for HSE to be Ready
+    while ((RCC->CR & RCC_CR_HSERDY) == 0)
+      ;                           /* Waits until HSE is stable.               */
 #endif /* STM32_HSE_ENABLED == TRUE */
 
   /* HSI48 activation.*/
